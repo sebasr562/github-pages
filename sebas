@@ -1,0 +1,1106 @@
+theme.js
+/**
+ * LUXE Shopify Theme
+ * Main JavaScript file
+ */
+
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize all components
+  initMobileMenu();
+  initProductQuickView();
+  initProductGallery();
+  initNewsletterForm();
+  initStickyHeader();
+  initQuantitySelectors();
+  initAccordions();
+  initAnnouncements();
+});
+
+/**
+ * Mobile Menu Functionality
+ */
+function initMobileMenu() {
+  const mobileMenuButton = document.getElementById('mobile-menu-button');
+  const mobileMenu = document.getElementById('mobile-menu');
+  
+  if (mobileMenuButton && mobileMenu) {
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+      document.body.classList.toggle('menu-open');
+    });
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!mobileMenu.contains(e.target) && !mobileMenuButton.contains(e.target) && !mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+        document.body.classList.remove('menu-open');
+      }
+    });
+  }
+}
+
+/**
+ * Product Quick View
+ */
+function initProductQuickView() {
+  const quickViewButtons = document.querySelectorAll('.quick-view button');
+  
+  quickViewButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      const productId = button.closest('.product-card').dataset.productId;
+      
+      // In a real implementation, this would fetch product data and show modal
+      // For demo purposes, we'll just show an alert
+      console.log(`Quick view for product ${productId}`);
+      
+      // Fetch product data
+      fetchProductData(productId)
+        .then(data => {
+          showQuickViewModal(data);
+        })
+        .catch(error => {
+          console.error('Error fetching product data:', error);
+        });
+    });
+  });
+}
+
+/**
+ * Fetch product data from Shopify
+ * @param {string} productId - The product ID
+ * @returns {Promise} - Promise with product data
+ */
+function fetchProductData(productId) {
+  // In a real implementation, this would use the Shopify AJAX API
+  // For demo purposes, we'll return a mock promise
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        id: productId,
+        title: 'Sample Product',
+        price: '$129.00',
+        description: 'This is a sample product description.',
+        images: ['product-image.jpg']
+      });
+    }, 300);
+  });
+}
+
+/**
+ * Show quick view modal with product data
+ * @param {Object} product - The product data
+ */
+function showQuickViewModal(product) {
+  // Create modal HTML
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-carbon-black bg-opacity-75 flex items-center justify-center z-50';
+  modal.id = 'quick-view-modal';
+  
+  modal.innerHTML = `
+    
+
+      
+
+        
+${product.title}
+
+        
+          
+        
+      
+
+      
+
+        
+
+          
+        
+
+        
+
+          
+${product.price}
+
+
+          
+${product.description}
+
+
+          
+
+            Quantity
+            
+
+              -
+              
+1
+
+              +
+            
+
+          
+
+          Add to Cart
+          
+
+            View Full Details
+          
+
+        
+
+      
+
+    
+
+  `;
+  
+  document.body.appendChild(modal);
+  document.body.classList.add('overflow-hidden');
+  
+  // Add event listeners
+  document.getElementById('close-modal').addEventListener('click', () => {
+    document.body.removeChild(modal);
+    document.body.classList.remove('overflow-hidden');
+  });
+  
+  // Quantity buttons
+  const quantityInput = modal.querySelector('input[type="number"]');
+  modal.querySelector('.decrease').addEventListener('click', () => {
+    if (quantityInput.value > 1) {
+      quantityInput.value = parseInt(quantityInput.value) - 1;
+    }
+  });
+  
+  modal.querySelector('.increase').addEventListener('click', () => {
+    quantityInput.value = parseInt(quantityInput.value) + 1;
+  });
+  
+  // Close when clicking outside
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+      document.body.classList.remove('overflow-hidden');
+    }
+  });
+}
+
+/**
+ * Product Gallery
+ */
+function initProductGallery() {
+  const productGalleries = document.querySelectorAll('.product-gallery');
+  
+  productGalleries.forEach(gallery => {
+    const mainImage = gallery.querySelector('.main-image');
+    const thumbnails = gallery.querySelectorAll('.thumbnail');
+    
+    thumbnails.forEach(thumbnail => {
+      thumbnail.addEventListener('click', () => {
+        // Update main image
+        const newSrc = thumbnail.dataset.src;
+        mainImage.src = newSrc;
+        
+        // Update active state
+        thumbnails.forEach(t => t.classList.remove('active'));
+        thumbnail.classList.add('active');
+      });
+    });
+  });
+}
+
+/**
+ * Newsletter Form
+ */
+function initNewsletterForm() {
+  const newsletterForm = document.querySelector('form');
+  
+  if (newsletterForm) {
+    newsletterForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const emailInput = newsletterForm.querySelector('input[type="email"]');
+      const email = emailInput.value.trim();
+      
+      if (validateEmail(email)) {
+        // In a real implementation, this would submit to Shopify or a newsletter service
+        // For demo purposes, we'll just show a success message
+        
+        // Create success message
+        const successMessage = document.createElement('div');
+        successMessage.className = 'text-green-600 mt-4';
+        successMessage.textContent = 'Thank you for subscribing!';
+        
+        // Replace form with success message
+        newsletterForm.innerHTML = '';
+        newsletterForm.appendChild(successMessage);
+      } else {
+        // Show error
+        let errorMessage = newsletterForm.querySelector('.error-message');
+        
+        if (!errorMessage) {
+          errorMessage = document.createElement('div');
+          errorMessage.className = 'text-red-600 mt-2 text-sm';
+          emailInput.parentNode.appendChild(errorMessage);
+        }
+        
+        errorMessage.textContent = 'Please enter a valid email address.';
+      }
+    });
+  }
+}
+
+/**
+ * Validate email format
+ * @param {string} email - The email to validate
+ * @returns {boolean} - Whether the email is valid
+ */
+function validateEmail(email) {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
+
+/**
+ * Sticky Header
+ */
+function initStickyHeader() {
+  const header = document.querySelector('header');
+  let lastScrollTop = 0;
+  
+  if (header) {
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      
+      if (scrollTop > 100) {
+        header.classList.add('sticky-header');
+        
+        // Hide on scroll down, show on scroll up
+        if (scrollTop > lastScrollTop) {
+          header.classList.add('header-hidden');
+        } else {
+          header.classList.remove('header-hidden');
+        }
+      } else {
+        header.classList.remove('sticky-header');
+      }
+      
+      lastScrollTop = scrollTop;
+    });
+  }
+}
+
+/**
+ * Quantity Selectors
+ */
+function initQuantitySelectors() {
+  const quantitySelectors = document.querySelectorAll('.quantity-selector');
+  
+  quantitySelectors.forEach(selector => {
+    const decreaseBtn = selector.querySelector('.decrease');
+    const increaseBtn = selector.querySelector('.increase');
+    const input = selector.querySelector('input');
+    
+    decreaseBtn.addEventListener('click', () => {
+      if (input.value > 1) {
+        input.value = parseInt(input.value) - 1;
+        // Trigger change event for cart updates
+        input.dispatchEvent(new Event('change'));
+      }
+    });
+    
+    increaseBtn.addEventListener('click', () => {
+      input.value = parseInt(input.value) + 1;
+      // Trigger change event for cart updates
+      input.dispatchEvent(new Event('change'));
+    });
+  });
+}
+
+/**
+ * Accordions
+ */
+function initAccordions() {
+  const accordionHeaders = document.querySelectorAll('.accordion-header');
+  
+  accordionHeaders.forEach(header => {
+    header.addEventListener('click', () => {
+      const content = header.nextElementSibling;
+      const icon = header.querySelector('svg');
+      
+      // Toggle content
+      content.classList.toggle('hidden');
+      
+      // Rotate icon
+      if (icon) {
+        icon.classList.toggle('rotate-180');
+      }
+    });
+  });
+}
+
+/**
+ * Announcement Bar
+ */
+function initAnnouncements() {
+  const announcementBar = document.querySelector('.announcement-bar');
+  
+  if (announcementBar) {
+    // Clone the content for seamless scrolling
+    const content = announcementBar.innerHTML;
+    announcementBar.innerHTML = content + content;
+  }
+}
+theme.css
+/**
+ * LUXE Shopify Theme
+ * Main CSS file
+ */
+
+/* Base Styles */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --color-carbon-black: #111111;
+  --color-pure-white: #FFFFFF;
+  --color-gold-metallic: #C8AA6E;
+  --color-chrome-silver: #B0B0B0;
+  --font-display: 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  src: local('SF Pro Display');
+  font-weight: normal;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-carbon-black);
+  background-color: var(--color-pure-white);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* Typography */
+.logo-text {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.gold-gradient {
+  background: linear-gradient(135deg, #D4BC82 0%, #C8AA6E 50%, #B39355 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+.silver-gradient {
+  background: linear-gradient(135deg, #CCCCCC 0%, #B0B0B0 50%, #999999 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+/* Header */
+header {
+  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sticky-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--color-pure-white);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+}
+
+.header-hidden {
+  transform: translateY(-100%);
+}
+
+/* Navigation */
+.nav-link {
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1px;
+  bottom: -2px;
+  left: 0;
+  background-color: var(--color-carbon-black);
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* Buttons */
+.theme-button {
+  transition: all 0.3s ease;
+}
+
+.theme-button:hover {
+  transform: translateY(-2px);
+}
+
+/* Product Cards */
+.product-card:hover .quick-view {
+  opacity: 1;
+}
+
+.product-image {
+  transition: transform 0.5s ease;
+}
+
+.product-card:hover .product-image {
+  transform: scale(1.05);
+}
+
+/* Announcement Bar */
+.announcement-bar {
+  animation: slide 20s linear infinite;
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Mobile Menu */
+body.menu-open {
+  overflow: hidden;
+}
+
+#mobile-menu {
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* Product Gallery */
+.product-gallery .thumbnail {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.product-gallery .thumbnail:hover,
+.product-gallery .thumbnail.active {
+  opacity: 1;
+}
+
+/* Quantity Selector */
+.quantity-selector input {
+  -moz-appearance: textfield;
+}
+
+.quantity-selector input::-webkit-outer-spin-button,
+.quantity-selector input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.quantity-btn {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.quantity-btn:hover {
+  background-color: #f5f5f5;
+}
+
+/* Accordions */
+.accordion-header {
+  cursor: pointer;
+}
+
+.accordion-header svg {
+  transition: transform 0.3s ease;
+}
+
+/* Newsletter Form */
+input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-gold-metallic);
+}
+
+/* Quick View Modal */
+#quick-view-modal {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  h1 {
+    font-size: 2rem;
+  }
+  
+  h2 {
+    font-size: 1.75rem;
+  }
+}
+
+/* Utility Classes */
+.aspect-w-1 {
+  position: relative;
+  padding-bottom: 100%;
+}
+
+.aspect-w-4 {
+  position: relative;
+  padding-bottom: 125%;
+}
+
+.aspect-h-1 > *,
+.aspect-h-5 > * {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+settings_schema.json
+{
+  "current": {
+    "sections": {
+      "header": {
+        "type": "header",
+        "settings": {
+          "logo": "",
+          "logo_width": 140,
+          "logo_position": "middle-left",
+          "menu": "main-menu",
+          "show_line_separator": true,
+          "enable_sticky_header": true,
+          "announcement_bar_enabled": true,
+          "announcement_bar_text": "Free shipping on orders over $100",
+          "announcement_bar_color": "#111111",
+          "announcement_bar_text_color": "#FFFFFF"
+        }
+      },
+      "footer": {
+        "type": "footer",
+        "blocks": {
+          "footer_block_1": {
+            "type": "link_list",
+            "settings": {
+              "heading": "Shop",
+              "menu": "footer-shop"
+            }
+          },
+          "footer_block_2": {
+            "type": "link_list",
+            "settings": {
+              "heading": "About",
+              "menu": "footer-about"
+            }
+          },
+          "footer_block_3": {
+            "type": "link_list",
+            "settings": {
+              "heading": "Customer Service",
+              "menu": "footer-service"
+            }
+          },
+          "footer_block_4": {
+            "type": "text",
+            "settings": {
+              "heading": "About LUXE",
+              "subtext": "Elevating everyday experiences through exceptional design and premium quality."
+            }
+          }
+        },
+        "settings": {
+          "color_scheme": "background-1",
+          "newsletter_enable": true,
+          "newsletter_heading": "Join Our Community",
+          "show_social": true,
+          "enable_country_selector": false,
+          "enable_language_selector": false,
+          "payment_enable": true,
+          "margin_top": 0,
+          "padding_top": 60,
+          "padding_bottom": 30
+        }
+      },
+      "hero": {
+        "type": "hero",
+        "settings": {
+          "heading": "Elevate Your Style",
+          "heading_size": "h1",
+          "subheading": "Discover our premium collection of luxury products designed for those who appreciate the finer things in life.",
+          "button_label": "Shop Now",
+          "button_link": "/collections/all",
+          "second_button_label": "Explore",
+          "second_button_link": "/pages/about",
+          "color_scheme": "background-2",
+          "full_width": true,
+          "padding_top": 80,
+          "padding_bottom": 80
+        }
+      },
+      "featured_products": {
+        "type": "featured-collection",
+        "settings": {
+          "title": "Featured Products",
+          "heading_size": "h2",
+          "description": "Our most popular premium selections.",
+          "show_description": true,
+          "collection": "featured-products",
+          "products_to_show": 4,
+          "columns_desktop": 4,
+          "full_width": false,
+          "show_view_all": true,
+          "view_all_style": "link",
+          "enable_desktop_slider": false,
+          "color_scheme": "background-1",
+          "image_ratio": "square",
+          "show_secondary_image": true,
+          "show_vendor": false,
+          "show_rating": true,
+          "enable_quick_add": true,
+          "columns_mobile": "2",
+          "swipe_on_mobile": true,
+          "padding_top": 60,
+          "padding_bottom": 60
+        }
+      },
+      "categories": {
+        "type": "collection-list",
+        "blocks": {
+          "collection1": {
+            "type": "featured_collection",
+            "settings": {
+              "collection": "accessories"
+            }
+          },
+          "collection2": {
+            "type": "featured_collection",
+            "settings": {
+              "collection": "apparel"
+            }
+          },
+          "collection3": {
+            "type": "featured_collection",
+            "settings": {
+              "collection": "home"
+            }
+          }
+        },
+        "settings": {
+          "title": "Shop by Category",
+          "heading_size": "h2",
+          "image_ratio": "square",
+          "columns_desktop": 3,
+          "color_scheme": "background-1",
+          "show_view_all": false,
+          "columns_mobile": "1",
+          "swipe_on_mobile": true,
+          "padding_top": 60,
+          "padding_bottom": 60
+        }
+      },
+      "brand_story": {
+        "type": "rich-text",
+        "blocks": {
+          "heading": {
+            "type": "heading",
+            "settings": {
+              "heading": "Our Story",
+              "heading_size": "h2"
+            }
+          },
+          "text": {
+            "type": "text",
+            "settings": {
+              "text": "
+We believe in the power of exceptional design to elevate everyday experiences. Our brand was founded on the principle that luxury should be accessible without compromising on quality or aesthetics.
+
+Each product in our collection is thoughtfully designed and crafted with premium materials, ensuring both beauty and longevity. We're committed to creating pieces that become cherished parts of your life.
+
+"
+            }
+          },
+          "button": {
+            "type": "button",
+            "settings": {
+              "button_label": "Learn More",
+              "button_link": "/pages/about",
+              "button_style_secondary": true
+            }
+          }
+        },
+        "settings": {
+          "color_scheme": "background-2",
+          "full_width": true,
+          "padding_top": 80,
+          "padding_bottom": 80
+        }
+      },
+      "newsletter": {
+        "type": "newsletter",
+        "blocks": {
+          "heading": {
+            "type": "heading",
+            "settings": {
+              "heading": "Join Our Community",
+              "heading_size": "h2"
+            }
+          },
+          "paragraph": {
+            "type": "paragraph",
+            "settings": {
+              "text": "Subscribe to receive updates on new collections, exclusive offers, and design inspiration."
+            }
+          },
+          "email_form": {
+            "type": "email_form",
+            "settings": {
+            }
+          }
+        },
+        "settings": {
+          "color_scheme": "background-1",
+          "full_width": true,
+          "padding_top": 60,
+          "padding_bottom": 60
+        }
+      },
+      "instagram_feed": {
+        "type": "custom-liquid",
+        "settings": {
+          "custom_liquid": "{% if settings.instagram_access_token != blank %}\n  
+\n    
+Follow Our Journey
+\n    
+@{{ settings.instagram_username }}
+
+\n    
+\n      {% for i in (1..8) %}\n        
+\n          \n            \"Instagram\n          \n        
+\n      {% endfor %}\n    
+\n  
+\n{% endif %}",
+          "color_scheme": "background-1",
+          "padding_top": 60,
+          "padding_bottom": 60
+        }
+      }
+    },
+    "content_for_index": [
+      "hero",
+      "categories",
+      "featured_products",
+      "brand_story",
+      "newsletter",
+      "instagram_feed"
+    ],
+    "color_schemes": {
+      "background-1": {
+        "settings": {
+          "background": "#FFFFFF",
+          "background_gradient": "",
+          "text": "#111111",
+          "button": "#111111",
+          "button_label": "#FFFFFF",
+          "secondary_button_label": "#111111",
+          "shadow": "#111111"
+        }
+      },
+      "background-2": {
+        "settings": {
+          "background": "#111111",
+          "background_gradient": "",
+          "text": "#FFFFFF",
+          "button": "#FFFFFF",
+          "button_label": "#111111",
+          "secondary_button_label": "#FFFFFF",
+          "shadow": "#111111"
+        }
+      },
+      "accent-1": {
+        "settings": {
+          "background": "#C8AA6E",
+          "background_gradient": "",
+          "text": "#FFFFFF",
+          "button": "#FFFFFF",
+          "button_label": "#C8AA6E",
+          "secondary_button_label": "#FFFFFF",
+          "shadow": "#111111"
+        }
+      },
+      "accent-2": {
+        "settings": {
+          "background": "#B0B0B0",
+          "background_gradient": "",
+          "text": "#FFFFFF",
+          "button": "#FFFFFF",
+          "button_label": "#B0B0B0",
+          "secondary_button_label": "#FFFFFF",
+          "shadow": "#111111"
+        }
+      }
+    }
+  },
+  "presets": {
+    "Default": {
+      "colors_solid_button_labels": "#FFFFFF",
+      "colors_accent_1": "#C8AA6E",
+      "colors_accent_2": "#B0B0B0",
+      "colors_text": "#111111",
+      "colors_outline_button_labels": "#111111",
+      "colors_background_1": "#FFFFFF",
+      "colors_background_2": "#111111",
+      "type_header_font": "helvetica_n7",
+      "type_body_font": "inter_n4",
+      "sections": {
+        "announcement-bar": {
+          "type": "announcement-bar",
+          "blocks": {
+            "announcement-bar-0": {
+              "type": "announcement",
+              "settings": {
+                "text": "Free shipping on orders over $100",
+                "color_scheme": "background-2",
+                "link": ""
+              }
+            }
+          },
+          "block_order": [
+            "announcement-bar-0"
+          ],
+          "settings": {
+          }
+        }
+      }
+    }
+  }
+}
+product-card.liquid
+{% comment %}
+  Product Card Snippet
+  Usage: {% render 'product-card', product: product %}
+{% endcomment %}
+
+
+  
+
+    
+      
+
+        {% if product.featured_image %}
+          {{ product.featured_image.alt | escape }}
+          {% if product.images[1] != blank and settings.show_secondary_image %}
+            {{ product.images[1].alt | escape }}
+          {% endif %}
+        {% else %}
+          
+
+            {{ 'product-1' | placeholder_svg_tag: 'w-1/2 h-1/2 text-gray-300' }}
+          
+
+        {% endif %}
+      
+
+    
+    
+
+      Quick View
+    
+
+  
+
+  
+  
+
+    {{ product.title }}
+  
+
+  
+  
+
+    
+      {% if product.compare_at_price > product.price %}
+        {{ product.compare_at_price | money }}
+      {% endif %}
+      {{ product.price | money }}
+    
+    
+    {% if settings.show_rating and product.metafields.reviews.rating %}
+      
+
+        {%- for i in (1..5) -%}
+          {%- if i <= product.metafields.reviews.rating.value -%}
+            
+          {%- else -%}
+            
+          {%- endif -%}
+        {%- endfor -%}
+      
+
+    {% endif %}
+  
+
+  
+  {% if settings.enable_quick_add %}
+    
+
+      
+        {% if product.available %}
+          Add to Cart
+        {% else %}
+          Sold Out
+        {% endif %}
+      
+    
+
+  {% endif %}
+theme.liquid
+
+
+
+  
+  
+  
+  
+  
+  
+  {%- if settings.favicon != blank -%}
+    
+  {%- endif -%}
+  
+  
+  
+  {% if page_description %}
+    
+  {% endif %}
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  {{ 'theme.css' | asset_url | stylesheet_tag }}
+  
+  
+  {{ content_for_header }}
+  
+  
+  
+
+
+
+  
+  {% section 'announcement-bar' %}
+  
+  
+  {% section 'header' %}
+  
+  
+
+    {{ content_for_layout }}
+  
+
+  
+  
+  {% section 'footer' %}
+  
+  
+  
+
+  
+  
+  
+
+    
+
+      
+
+        
+Your Cart
+
+        
+          
+        
+      
+
+      
+      
+
+        
+        
+
+          Your cart is empty
+        
+
+      
+
+      
+      
+
+        
+
+          Subtotal
+          $0.00
+        
+
+        
+Shipping and taxes calculated at checkout
+
+
+        
+          Checkout
+        
+        
+          Continue Shopping
+        
+      
+
+    
+
+  
+
+  
+  
+  
+
+  
+  
